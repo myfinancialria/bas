@@ -28,8 +28,14 @@ jobs:
       - name: Generate report
         run: python src/premarket_report.py
 
+      - name: Build report website assets
+        run: python src/build_site.py
+
       - name: Commit report
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Add pre-market report"
-          file_pattern: reports/*.md
+          file_pattern: |
+            reports/*.md
+            reports/manifest.json
+            index.html
