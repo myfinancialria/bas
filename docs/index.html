@@ -1,67 +1,8 @@
-from __future__ import annotations
-
-import json
-import re
-import shutil
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[1]
-SOURCE_REPORTS_DIR = ROOT / "reports"
-DOCS_DIR = ROOT / "docs"
-DOCS_REPORTS_DIR = DOCS_DIR / "reports"
-MANIFEST_PATH = DOCS_REPORTS_DIR / "manifest.json"
-INDEX_PATH = DOCS_DIR / "index.html"
-
-
-def extract_title(markdown: str) -> str:
-    for line in markdown.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("# "):
-            return stripped[2:].strip()
-    return "Pre-market report"
-
-
-def sync_reports() -> None:
-    DOCS_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    for path in SOURCE_REPORTS_DIR.glob("*.md"):
-        shutil.copy2(path, DOCS_REPORTS_DIR / path.name)
-    for stale_path in DOCS_REPORTS_DIR.glob("*.md"):
-        if not (SOURCE_REPORTS_DIR / stale_path.name).exists():
-            stale_path.unlink()
-
-
-def build_manifest() -> list[dict[str, str]]:
-    report_files = sorted(SOURCE_REPORTS_DIR.glob("*.md"), key=lambda path: path.name, reverse=True)
-    entries: list[dict[str, str]] = []
-    for path in report_files:
-        text = path.read_text(encoding="utf-8")
-        title = extract_title(text)
-        match = re.match(r"(?P<date>\d{4}-\d{2}-\d{2})", path.stem)
-        displayed_date = match.group("date") if match else path.stem
-        entries.append(
-            {
-                "filename": path.name,
-                "title": title,
-                "date": displayed_date,
-                "url": f"reports/{path.name}",
-            }
-        )
-    return entries
-
-
-def write_manifest(entries: list[dict[str, str]]) -> None:
-    DOCS_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(json.dumps(entries, indent=2) + "\n", encoding="utf-8")
-
-
-def write_index_html() -> None:
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
-    INDEX_PATH.write_text(
-        """<!DOCTYPE html>
-<html lang=\"en\">
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pre-Market Report Dashboard</title>
     <style>
       :root {
@@ -241,18 +182,3 @@ def write_index_html() -> None:
     </script>
   </body>
 </html>
-""",
-        encoding="utf-8",
-    )
-
-
-def main() -> None:
-    sync_reports()
-    entries = build_manifest()
-    write_manifest(entries)
-    write_index_html()
-    print(f"Wrote {MANIFEST_PATH} and {INDEX_PATH}")
-
-
-if __name__ == "__main__":
-    main()
