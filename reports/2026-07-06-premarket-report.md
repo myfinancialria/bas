@@ -13,35 +13,39 @@ Generated for the 9:21 AM IST trading-day workflow.
 
 ## Data Snapshot
 
-| Factor | Last | Change % | Interpretation |
-|---|---:|---:|---|
-| NIFTY 50 | 24,378.40 | 0.44 | Positive |
-| SENSEX | 78,116.03 | 0.45 | Positive |
-| BANKNIFTY | 58,254.00 | 0.54 | Positive |
-| India VIX | 11.95 | 1.31 | Positive |
-| USDINR | 95.29 | -0.25 | Negative |
-| Crude Oil | 68.61 | -0.12 | Negative |
-| Gold | 4,175.50 | 1.53 | Positive |
+- Primary data source: **Fyers API (live)**
+
+| Factor | Last | Change % | Interpretation | Source |
+|---|---:|---:|---|---|
+| NIFTY 50 | 24,370.00 | 0.41 | Positive | fyers |
+| SENSEX | 78,086.93 | 0.42 | Positive | fyers |
+| BANKNIFTY | 58,271.30 | 0.57 | Positive | fyers |
+| FINNIFTY | 27,014.80 | 0.52 | Positive | fyers |
+| India VIX | 11.91 | 0.93 | Positive | fyers |
+| USDINR | 95.24 | 0.00 | Negative | fyers |
+| Crude Oil | 6,564.00 | -0.06 | Negative | fyers |
+| Gold | 147,245.00 | -0.09 | Negative | fyers |
 
 ## Option-Chain Context
 
-- NIFTY chain available: False
-- NIFTY expiry: N/A
-- NIFTY PCR: N/A
-- NIFTY top call OI strikes: []
-- NIFTY top put OI strikes: []
-- SENSEX chain available: False
-- SENSEX expiry: N/A
-- SENSEX PCR: N/A
+- Chain source: fyers (NIFTY) / fyers (SENSEX)
+- NIFTY chain available: True
+- NIFTY expiry: 07-Jul-2026
+- NIFTY PCR: 1.41
+- NIFTY top call OI strikes: [24400, 24500, 24600]
+- NIFTY top put OI strikes: [24300, 24350, 24400]
+- SENSEX chain available: True
+- SENSEX expiry: 09-Jul-2026
+- SENSEX PCR: 1.22
 
 ## Top 3 Trade Candidates
 
 ### 1. NIFTY - Bull put credit spread
 
-- Structure: **Sell 24200 PE / Buy 24100 PE**
-- Entry: After 9:21 IST, enter only if NIFTY holds above 24300, VIX is flat/down, and put OI remains firm near 24200.
+- Structure: **Sell 24150 PE / Buy 24050 PE**
+- Entry: After 9:21 IST, enter only if NIFTY holds above 24250, VIX is flat/down, and put OI remains firm near 24150.
 - Exit: Book 50-65% of max credit, or exit if momentum fades by midday.
-- Stop / invalidation: Exit if NIFTY sustains below 24250, spread premium doubles, or VIX rises more than 5-7%.
+- Stop / invalidation: Exit if NIFTY sustains below 24200, spread premium doubles, or VIX rises more than 5-7%.
 - Why ranked here: Best fit when index momentum and financial-sector lead-lag remain supportive.
 
 ### 2. SENSEX - Bull put credit spread
@@ -54,10 +58,10 @@ Generated for the 9:21 AM IST trading-day workflow.
 
 ### 3. NIFTY - Iron condor
 
-- Structure: **Sell 24150 PE / Buy 24050 PE + Sell 24750 CE / Buy 24850 CE**
+- Structure: **Sell 24100 PE / Buy 24000 PE + Sell 24700 CE / Buy 24800 CE**
 - Entry: Enter after 9:35 IST only if price remains range-bound and VIX/IV is not expanding.
 - Exit: Book 40-55% of combined credit.
-- Stop / invalidation: Exit if NIFTY breaks below 24200 or above 24700.
+- Stop / invalidation: Exit if NIFTY breaks below 24150 or above 24650.
 - Why ranked here: Works only if Monday opens stable and premium is rich enough on both sides.
 
 ## Trades To Avoid

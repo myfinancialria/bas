@@ -11,6 +11,8 @@ import requests
 import yaml
 import yfinance as yf
 
+import fyers_client
+
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS_DIR = ROOT / "reports"
@@ -25,6 +27,24 @@ class MarketPoint:
     last: float | None
     previous_close: float | None
     change_pct: float | None
+    source: str = "yahoo"
+
+
+# Display name -> (Fyers symbol or ("<underlying>", "<segment>") to resolve a
+# nearest-expiry future). Indices are direct symbols; currency/commodity cues
+# are resolved from the Fyers symbol master.
+FYERS_INDEX_SYMBOLS: dict[str, str] = {
+    "NIFTY 50": "NSE:NIFTY50-INDEX",
+    "SENSEX": "BSE:SENSEX-INDEX",
+    "BANKNIFTY": "NSE:NIFTYBANK-INDEX",
+    "FINNIFTY": "NSE:FINNIFTY-INDEX",
+    "India VIX": "NSE:INDIAVIX-INDEX",
+}
+FYERS_FUTURE_SYMBOLS: dict[str, tuple[str, str]] = {
+    "USDINR": ("USDINR", "NSE_CD"),
+    "Crude Oil": ("CRUDEOIL", "MCX_COM"),
+    "Gold": ("GOLD", "MCX_COM"),
+}
 
 
 def today_ist() -> dt.date:
@@ -59,6 +79,43 @@ def fetch_yahoo_point(name: str, symbol: str) -> MarketPoint:
         return MarketPoint(name, symbol, last, previous, change_pct)
     except Exception:
         return MarketPoint(name, symbol, None, None, None)
+
+
+def gather_market_points(yahoo_symbols: dict[str, str]) -> dict[str, MarketPoint]:
+    """Return a MarketPoint per instrument, preferring live Fyers data.
+
+    Indices and the currency/commodity cues are pulled from Fyers when a token
+    is configured; anything Fyers can't resolve (or the whole set, if Fyers is
+    unavailable) falls back to Yahoo Finance so the report always renders.
+    """
+    points: dict[str, MarketPoint] = {}
+
+    if fyers_client.is_configured():
+        # Build the Fyers symbol list: direct index symbols + resolved futures.
+        symbol_of: dict[str, str] = dict(FYERS_INDEX_SYMBOLS)
+        for name, (underlying, segment) in FYERS_FUTURE_SYMBOLS.items():
+            resolved = fyers_client.resolve_nearest_future(underlying, segment)
+            if resolved:
+                symbol_of[name] = resolved
+
+        try:
+            quotes = fyers_client.quotes(list(symbol_of.values()))
+        except Exception:
+            quotes = {}
+
+        for name, sym in symbol_of.items():
+            q = quotes.get(sym)
+            if q and q.last is not None:
+                points[name] = MarketPoint(
+                    name, sym, q.last, q.previous_close, q.change_pct, source="fyers"
+                )
+
+    # Fill any gaps (or everything, if Fyers is off) from Yahoo Finance.
+    for name, ysym in yahoo_symbols.items():
+        if name not in points:
+            points[name] = fetch_yahoo_point(name, ysym)
+
+    return points
 
 
 def nse_session() -> requests.Session:
@@ -122,6 +179,20 @@ def summarize_chain(chain: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
+def gather_chain(fyers_symbol: str, nse_symbol: str) -> dict[str, Any]:
+    """Option-chain summary from Fyers, falling back to the NSE web API."""
+    if fyers_client.is_configured():
+        try:
+            summary = fyers_client.option_chain_summary(fyers_symbol)
+        except Exception:
+            summary = {"available": False}
+        if summary.get("available"):
+            return summary
+    summary = summarize_chain(fetch_option_chain(nse_symbol))
+    summary.setdefault("source", "nse")
+    return summary
+
+
 def score_regime(points: dict[str, MarketPoint], nifty_chain: dict[str, Any]) -> tuple[int, str]:
     score = 50
     reasons: list[str] = []
@@ -167,6 +238,19 @@ def score_regime(points: dict[str, MarketPoint], nifty_chain: dict[str, Any]) ->
             reasons.append("NIFTY PCR crowded on puts")
 
     return max(0, min(100, score)), "; ".join(reasons) or "Mixed signals"
+
+
+def data_source_label(
+    points: dict[str, MarketPoint], *chains: dict[str, Any]
+) -> str:
+    """Human-readable summary of where the data came from."""
+    sources = {p.source for p in points.values()}
+    sources |= {c.get("source", "nse") for c in chains if c.get("available")}
+    if sources == {"fyers"}:
+        return "Fyers API (live)"
+    if "fyers" in sources:
+        return "Fyers API (live) with Yahoo/NSE fallback for some factors"
+    return "Yahoo Finance / NSE public data (Fyers not configured)"
 
 
 def format_num(value: float | int | None, digits: int = 2) -> str:
@@ -320,14 +404,15 @@ def report() -> str:
         "NIFTY 50": "^NSEI",
         "SENSEX": "^BSESN",
         "BANKNIFTY": "^NSEBANK",
+        "FINNIFTY": "NIFTY_FIN_SERVICE.NS",
         "India VIX": "^INDIAVIX",
         "USDINR": "INR=X",
         "Crude Oil": "CL=F",
         "Gold": "GC=F",
     }
-    points = {name: fetch_yahoo_point(name, symbol) for name, symbol in symbols.items()}
-    nifty_chain = summarize_chain(fetch_option_chain("NIFTY"))
-    sensex_chain = summarize_chain(fetch_option_chain("SENSEX"))
+    points = gather_market_points(symbols)
+    nifty_chain = gather_chain("NSE:NIFTY50-INDEX", "NIFTY")
+    sensex_chain = gather_chain("BSE:SENSEX-INDEX", "SENSEX")
     score, score_reason = score_regime(points, nifty_chain)
     trades = build_trade_candidates(points, nifty_chain, sensex_chain, score)
 
@@ -354,8 +439,10 @@ def report() -> str:
         "",
         "## Data Snapshot",
         "",
-        "| Factor | Last | Change % | Interpretation |",
-        "|---|---:|---:|---|",
+        f"- Primary data source: **{data_source_label(points, nifty_chain, sensex_chain)}**",
+        "",
+        "| Factor | Last | Change % | Interpretation | Source |",
+        "|---|---:|---:|---|---|",
     ]
 
     for name, point in points.items():
@@ -363,7 +450,8 @@ def report() -> str:
         if point.change_pct is not None:
             interpretation = "Positive" if point.change_pct > 0 else "Negative"
         lines.append(
-            f"| {name} | {format_num(point.last)} | {format_num(point.change_pct)} | {interpretation} |"
+            f"| {name} | {format_num(point.last)} | {format_num(point.change_pct)} "
+            f"| {interpretation} | {point.source} |"
         )
 
     lines.extend(
@@ -371,6 +459,7 @@ def report() -> str:
             "",
             "## Option-Chain Context",
             "",
+            f"- Chain source: {nifty_chain.get('source', 'n/a')} (NIFTY) / {sensex_chain.get('source', 'n/a')} (SENSEX)",
             f"- NIFTY chain available: {nifty_chain.get('available')}",
             f"- NIFTY expiry: {nifty_chain.get('expiry', 'N/A')}",
             f"- NIFTY PCR: {nifty_chain.get('pcr', 'N/A')}",

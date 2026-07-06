@@ -246,11 +246,18 @@ def write_index_html() -> None:
     )
 
 
+def write_nojekyll() -> None:
+    """Disable Jekyll so GitHub Pages serves the docs/ folder verbatim."""
+    DOCS_DIR.mkdir(parents=True, exist_ok=True)
+    (DOCS_DIR / ".nojekyll").write_text("", encoding="utf-8")
+
+
 def main() -> None:
     sync_reports()
     entries = build_manifest()
     write_manifest(entries)
     write_index_html()
+    write_nojekyll()
     print(f"Wrote {MANIFEST_PATH} and {INDEX_PATH}")
 
 

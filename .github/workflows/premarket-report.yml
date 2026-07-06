@@ -1,18 +1,28 @@
-name: Pre-Market Options Report
+name: Pre-Market Report and Deploy
 
 on:
   schedule:
     # 9:21 AM IST = 3:51 AM UTC. GitHub schedules may be delayed by queueing.
     - cron: "51 3 * * 1-5"
+  push:
+    branches: [main]
   workflow_dispatch:
 
+# Needed for: committing the report (contents) and the official Pages deploy.
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time — prevents the "Deployment failed,
+# try again later" races that happen when two runs deploy concurrently.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  generate-report:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -25,17 +35,61 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # Data generation only runs on schedule / manual dispatch, not on the
+      # auto-commit push this job makes (avoids re-generating on every push).
+      - name: Fyers headless login (refresh access token)
+        if: github.event_name != 'push'
+        env:
+          FYERS_APP_ID: ${{ secrets.FYERS_APP_ID }}
+          FYERS_SECRET_KEY: ${{ secrets.FYERS_SECRET_KEY }}
+          FYERS_REDIRECT_URI: ${{ secrets.FYERS_REDIRECT_URI }}
+          FYERS_FY_ID: ${{ secrets.FYERS_FY_ID }}
+          FYERS_PIN: ${{ secrets.FYERS_PIN }}
+          FYERS_TOTP_SECRET: ${{ secrets.FYERS_TOTP_SECRET }}
+        run: |
+          if [ -n "$FYERS_APP_ID" ]; then
+            python src/fyers_login.py
+          else
+            echo "Fyers secrets not set — report will use public data fallback."
+          fi
+
       - name: Generate report
+        if: github.event_name != 'push'
+        env:
+          FYERS_APP_ID: ${{ secrets.FYERS_APP_ID }}
         run: python src/premarket_report.py
 
-      - name: Build report website assets
+      - name: Build site (docs/)
         run: python src/build_site.py
 
-      - name: Commit report
+      - name: Commit report and site
+        if: github.event_name != 'push'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Add pre-market report"
+          commit_message: "Update pre-market report and site"
           file_pattern: |
             reports/*.md
-            reports/manifest.json
-            index.html
+            docs/**
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Auto-set the Pages source to "GitHub Actions" on first run so no
+          # manual Settings change is required.
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
