@@ -103,6 +103,19 @@ def generate_access_token(verbose: bool = True) -> str:
     })
     url = r4.get("Url") or r4.get("url")
     if not url:
+        # A "s:ok" response carrying a data.auth consent object (no Url) means
+        # this app has never been authorised for this user. That is a one-time
+        # manual browser step; headless login works only afterwards.
+        if (r4.get("data") or {}).get("auth"):
+            authcode_url = (
+                "https://api-t1.fyers.in/api/v3/generate-authcode"
+                f"?client_id={app_id}&redirect_uri={redirect}"
+                "&response_type=code&state=sample_state"
+            )
+            raise RuntimeError(
+                "App not authorised yet. Open this URL once in a browser, log "
+                "in and grant access, then re-run:\n  " + authcode_url
+            )
         raise RuntimeError(f"token endpoint failed: {r4}")
     auth_code = parse_qs(urlparse(url).query).get("auth_code", [None])[0]
     if not auth_code:
