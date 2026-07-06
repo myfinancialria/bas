@@ -15,13 +15,13 @@ Generated for the 9:21 AM IST trading-day workflow.
 
 | Factor | Last | Change % | Interpretation |
 |---|---:|---:|---|
-| NIFTY 50 | 24,345.35 | 0.31 | Positive |
-| SENSEX | 77,763.91 | 0.34 | Positive |
-| BANKNIFTY | 58,180.20 | 0.42 | Positive |
-| India VIX | 11.96 | 1.36 | Positive |
-| USDINR | 95.25 | -0.29 | Negative |
-| Crude Oil | 68.42 | -0.39 | Negative |
-| Gold | 4,173.50 | 1.48 | Positive |
+| NIFTY 50 | 24,378.40 | 0.44 | Positive |
+| SENSEX | 78,116.03 | 0.45 | Positive |
+| BANKNIFTY | 58,254.00 | 0.54 | Positive |
+| India VIX | 11.95 | 1.31 | Positive |
+| USDINR | 95.29 | -0.25 | Negative |
+| Crude Oil | 68.61 | -0.12 | Negative |
+| Gold | 4,175.50 | 1.53 | Positive |
 
 ## Option-Chain Context
 
@@ -38,26 +38,26 @@ Generated for the 9:21 AM IST trading-day workflow.
 
 ### 1. NIFTY - Bull put credit spread
 
-- Structure: **Sell 24150 PE / Buy 24050 PE**
-- Entry: After 9:21 IST, enter only if NIFTY holds above 24250, VIX is flat/down, and put OI remains firm near 24150.
+- Structure: **Sell 24200 PE / Buy 24100 PE**
+- Entry: After 9:21 IST, enter only if NIFTY holds above 24300, VIX is flat/down, and put OI remains firm near 24200.
 - Exit: Book 50-65% of max credit, or exit if momentum fades by midday.
-- Stop / invalidation: Exit if NIFTY sustains below 24200, spread premium doubles, or VIX rises more than 5-7%.
+- Stop / invalidation: Exit if NIFTY sustains below 24250, spread premium doubles, or VIX rises more than 5-7%.
 - Why ranked here: Best fit when index momentum and financial-sector lead-lag remain supportive.
 
 ### 2. SENSEX - Bull put credit spread
 
-- Structure: **Sell 77100 PE / Buy 76900 PE**
-- Entry: Enter only if SENSEX holds above 77500 and put OI builds below spot.
+- Structure: **Sell 77400 PE / Buy 77200 PE**
+- Entry: Enter only if SENSEX holds above 77800 and put OI builds below spot.
 - Exit: Book 50-60% of max credit.
-- Stop / invalidation: Exit if SENSEX sustains below 77300 or spread premium doubles.
+- Stop / invalidation: Exit if SENSEX sustains below 77600 or spread premium doubles.
 - Why ranked here: Defined-risk way to express a constructive index regime while avoiding naked option risk.
 
 ### 3. NIFTY - Iron condor
 
-- Structure: **Sell 24100 PE / Buy 24000 PE + Sell 24700 CE / Buy 24800 CE**
+- Structure: **Sell 24150 PE / Buy 24050 PE + Sell 24750 CE / Buy 24850 CE**
 - Entry: Enter after 9:35 IST only if price remains range-bound and VIX/IV is not expanding.
 - Exit: Book 40-55% of combined credit.
-- Stop / invalidation: Exit if NIFTY breaks below 24150 or above 24650.
+- Stop / invalidation: Exit if NIFTY breaks below 24200 or above 24700.
 - Why ranked here: Works only if Monday opens stable and premium is rich enough on both sides.
 
 ## Trades To Avoid
