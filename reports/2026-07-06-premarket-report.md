@@ -17,26 +17,26 @@ Generated for the 9:21 AM IST trading-day workflow.
 
 | Factor | Last | Change % | Interpretation | Source |
 |---|---:|---:|---|---|
-| NIFTY 50 | 24,438.70 | 0.69 | Positive | fyers |
-| SENSEX | 78,321.25 | 0.72 | Positive | fyers |
-| BANKNIFTY | 58,433.90 | 0.86 | Positive | fyers |
-| FINNIFTY | 27,044.50 | 0.63 | Positive | fyers |
-| India VIX | 11.87 | 0.59 | Positive | fyers |
+| NIFTY 50 | 24,446.65 | 0.72 | Positive | fyers |
+| SENSEX | 78,359.38 | 0.77 | Positive | fyers |
+| BANKNIFTY | 58,435.60 | 0.86 | Positive | fyers |
+| FINNIFTY | 27,030.55 | 0.58 | Positive | fyers |
+| India VIX | 11.91 | 0.93 | Positive | fyers |
 | USDINR | 95.24 | 0.00 | Negative | fyers |
-| Crude Oil | 6,584.00 | 0.24 | Positive | fyers |
-| Gold | 147,005.00 | -0.25 | Negative | fyers |
+| Crude Oil | 6,510.00 | -0.88 | Negative | fyers |
+| Gold | 147,152.00 | -0.15 | Negative | fyers |
 
 ## Option-Chain Context
 
 - Chain source: fyers (NIFTY) / fyers (SENSEX)
 - NIFTY chain available: True
 - NIFTY expiry: 07-Jul-2026
-- NIFTY PCR: 1.78
-- NIFTY top call OI strikes: [24400, 24500, 24600]
+- NIFTY PCR: 1.82
+- NIFTY top call OI strikes: [24500, 24400, 24600]
 - NIFTY top put OI strikes: [24400, 24300, 24350]
 - SENSEX chain available: True
 - SENSEX expiry: 09-Jul-2026
-- SENSEX PCR: 1.6
+- SENSEX PCR: 1.56
 
 ## Top 3 Trade Candidates
 
@@ -50,10 +50,10 @@ Generated for the 9:21 AM IST trading-day workflow.
 
 ### 2. SENSEX - Bull put credit spread
 
-- Structure: **Sell 77600 PE / Buy 77400 PE**
-- Entry: Enter only if SENSEX holds above 78000 and put OI builds below spot.
+- Structure: **Sell 77700 PE / Buy 77500 PE**
+- Entry: Enter only if SENSEX holds above 78100 and put OI builds below spot.
 - Exit: Book 50-60% of max credit.
-- Stop / invalidation: Exit if SENSEX sustains below 77800 or spread premium doubles.
+- Stop / invalidation: Exit if SENSEX sustains below 77900 or spread premium doubles.
 - Why ranked here: Defined-risk way to express a constructive index regime while avoiding naked option risk.
 
 ### 3. NIFTY - Iron condor
